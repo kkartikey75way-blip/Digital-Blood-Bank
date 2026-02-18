@@ -1,6 +1,7 @@
 import { User, UserRole, IBloodStock } from "../models/user.model";
+import { getLowStockGroups } from "../utils/stock.utils";
 
-const bloodGroupMap: { [key: string]: keyof IBloodStock } = {
+const bloodGroupMap: Record<string, keyof IBloodStock> = {
     "A+": "A_POS",
     "A-": "A_NEG",
     "B+": "B_POS",
@@ -11,16 +12,27 @@ const bloodGroupMap: { [key: string]: keyof IBloodStock } = {
     "AB-": "AB_NEG",
 };
 
-/* Update Blood Stock */
 export const updateBloodStock = async (
     hospitalId: string,
     bloodGroup: string,
     units: number
-) => {
+): Promise<IBloodStock | undefined> => {
+    if (!Number.isFinite(units)) {
+        throw new Error("Invalid units value");
+    }
+
     const hospital = await User.findById(hospitalId);
 
     if (!hospital || hospital.role !== UserRole.HOSPITAL) {
         throw new Error("Hospital not found");
+    }
+
+    if (!hospital.isVerified) {
+        throw new Error("Hospital not verified by admin");
+    }
+
+    if (hospital.isBlocked) {
+        throw new Error("Hospital account is blocked");
     }
 
     const stockKey = bloodGroupMap[bloodGroup];
@@ -42,22 +54,39 @@ export const updateBloodStock = async (
         };
     }
 
-    hospital.bloodStock[stockKey] =
+    const updatedStock =
         (hospital.bloodStock[stockKey] || 0) + units;
 
-    // Use markModified if hospital.bloodStock is an object/subdocument
+    if (updatedStock < 0) {
+        throw new Error("Blood stock cannot be negative");
+    }
+
+    hospital.bloodStock[stockKey] = updatedStock;
+
     hospital.markModified("bloodStock");
+
     await hospital.save();
 
     return hospital.bloodStock;
 };
 
-export const getBloodStock = async (hospitalId: string) => {
+export const getBloodStock = async (
+    hospitalId: string
+) => {
     const hospital = await User.findById(hospitalId);
 
     if (!hospital || hospital.role !== UserRole.HOSPITAL) {
         throw new Error("Hospital not found");
     }
 
-    return hospital.bloodStock;
+    if (!hospital.isVerified) {
+        throw new Error("Hospital not verified by admin");
+    }
+
+    const lowStock = getLowStockGroups(hospital.bloodStock);
+
+    return {
+        bloodStock: hospital.bloodStock,
+        lowStockGroups: lowStock,
+    };
 };

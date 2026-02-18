@@ -1,5 +1,6 @@
 import { User, UserRole } from "../models/user.model";
 import { BloodRequest, RequestStatus } from "../models/request.model";
+import { getLowStockGroups } from "../utils/stock.utils";
 
 export const getSystemStats = async () => {
     const totalUsers = await User.countDocuments();
@@ -50,4 +51,31 @@ export const getAllRequests = async () => {
         .sort({ createdAt: -1 });
 
     return requests;
+};
+
+export const getHospitalsWithLowStock = async () => {
+    const hospitals = await User.find({
+        role: UserRole.HOSPITAL,
+        isVerified: true,
+    }).select("-password -refreshToken");
+
+    const result = hospitals
+        .map((hospital) => {
+            const lowStock = getLowStockGroups(
+                hospital.bloodStock
+            );
+
+            if (lowStock.length > 0) {
+                return {
+                    hospitalId: hospital._id,
+                    hospitalName: hospital.hospitalName,
+                    lowStockGroups: lowStock,
+                };
+            }
+
+            return null;
+        })
+        .filter(Boolean);
+
+    return result;
 };

@@ -1,11 +1,38 @@
 import { Router } from "express";
-import { refreshToken } from "../controllers/auth.controller";
-import { register, login } from "../controllers/auth.controller";
+import { refreshToken, register, login } from "../controllers/auth.controller";
+import { validate } from "../middlewares/validate.middleware";
+import { z } from "zod";
+
+const registerSchema = z.object({
+    body: z.object({
+        name: z.string().min(2),
+        email: z.string().email(),
+        phone: z.string().min(10),
+        password: z.string().min(6),
+        role: z.enum(["ADMIN", "DONOR", "PATIENT", "HOSPITAL"]),
+        bloodGroup: z.string().optional(),
+        hospitalName: z.string().optional(),
+        licenseNumber: z.string().optional(),
+    }),
+});
+
+const loginSchema = z.object({
+    body: z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+    }),
+});
+
+const refreshSchema = z.object({
+    body: z.object({
+        refreshToken: z.string(),
+    }),
+});
 
 const router = Router();
 
-router.post("/refresh", refreshToken);
-router.post("/register", register);
-router.post("/login", login);
+router.post("/refresh", validate(refreshSchema), refreshToken);
+router.post("/register", validate(registerSchema), register);
+router.post("/login", validate(loginSchema), login);
 
 export default router;

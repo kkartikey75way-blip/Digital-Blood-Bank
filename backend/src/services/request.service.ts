@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import { BloodRequest, RequestStatus } from "../models/request.model";
-import { User } from "../models/user.model";
+import { User, UserRole } from "../models/user.model";
 import { Donation } from "../models/donation.model";
+import { io } from "../server";
 
 export const createEmergencyRequest = async (
     userId: string,
@@ -10,23 +11,48 @@ export const createEmergencyRequest = async (
     longitude: number,
     urgencyLevel: "LOW" | "MEDIUM" | "HIGH"
 ) => {
+    if (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude)
+    ) {
+        throw new Error("Invalid location coordinates");
+    }
+    const user = await User.findById(userId);
 
+    if (!user || user.role !== UserRole.PATIENT) {
+        throw new Error("Only patients can create emergency requests");
+    }
+
+    if (user.isBlocked) {
+        throw new Error("User account is blocked");
+    }
     const existingRequest = await BloodRequest.findOne({
         patient: userId,
-        status: { $in: ["PENDING", "ACCEPTED"] },
+        status: { $in: [RequestStatus.PENDING, RequestStatus.ACCEPTED] },
     });
 
     if (existingRequest) {
-        throw new Error("You already have an active emergency request");
+        throw new Error(
+            "You already have an active emergency request"
+        );
     }
-
     const request = await BloodRequest.create({
         bloodGroup,
-        patient: userId,
+        patient: new mongoose.Types.ObjectId(userId),
         urgencyLevel,
+        status: RequestStatus.PENDING,
         location: {
             type: "Point",
             coordinates: [longitude, latitude],
+        },
+    });
+    io.emit("newEmergency", {
+        requestId: request._id,
+        bloodGroup,
+        urgencyLevel,
+        location: {
+            latitude,
+            longitude,
         },
     });
 
@@ -38,6 +64,7 @@ export const acceptEmergencyRequest = async (
     donorId: string
 ) => {
     const request = await BloodRequest.findById(requestId);
+    console.log(request);
 
     if (!request) {
         throw new Error("Request not found");
