@@ -1,30 +1,18 @@
-import {
-    createBrowserRouter,
-    Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { lazy, Suspense, type ReactNode } from "react";
 import Loader from "../layouts/Loader";
-import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
+const DashboardLayout = lazy(() => import("../layouts/DashboardLayout"));
 
+const Landing = lazy(() => import("../pages/Landing"));
 const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/auth/Register"));
 
-const PatientDashboard = lazy(
-    () => import("../pages/patient/PatientDashboard")
-);
-const DonorDashboard = lazy(
-    () => import("../pages/donor/DonorDashboard")
-);
-const AdminDashboard = lazy(
-    () => import("../pages/admin/AdminDashboard")
-);
-const HospitalDashboard = lazy(
-    () => import("../pages/hospital/HospitalDashboard")
-);
-const CreateEmergency = lazy(
-    () => import("../pages/patient/CreateEmergency")
-);
+const PatientDashboard = lazy(() => import("../pages/patient/PatientDashboard"));
+const DonorDashboard = lazy(() => import("../pages/donor/DonorDashboard"));
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
+const HospitalDashboard = lazy(() => import("../pages/hospital/HospitalDashboard"));
+const CreateEmergency = lazy(() => import("../pages/patient/CreateEmergency"));
 
 const withSuspense = (element: ReactNode) => (
     <Suspense fallback={<Loader />}>
@@ -35,6 +23,10 @@ const withSuspense = (element: ReactNode) => (
 const router = createBrowserRouter([
     {
         path: "/",
+        element: withSuspense(<Landing />),
+    },
+    {
+        path: "/login",
         element: withSuspense(<Login />),
     },
     {

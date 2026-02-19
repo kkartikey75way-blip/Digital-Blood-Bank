@@ -31,7 +31,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
             try {
                 const refreshToken = getRefreshToken();
                 if (refreshToken) {
-                    const refreshResult: any = await baseQuery(
+                    const refreshResult = await baseQuery(
                         {
                             url: "/auth/refresh",
                             method: "POST",
@@ -39,7 +39,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
                         },
                         api,
                         extraOptions
-                    );
+                    ) as { data?: { success: boolean; data: { accessToken: string; refreshToken: string } } };
 
                     if (refreshResult.data) {
                         const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResult.data.data;
@@ -69,6 +69,6 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const baseApi = createApi({
     reducerPath: "api",
     baseQuery: baseQueryWithReauth,
-    tagTypes: ["User", "Request", "Donation"],
+    tagTypes: ["User", "Request", "Donation", "Stock", "Stats", "Hospital"],
     endpoints: () => ({}),
 });

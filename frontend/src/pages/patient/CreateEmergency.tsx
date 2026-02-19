@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
 import { useCreateEmergencyMutation } from "../../services/requestApi";
 import { emergencyRequestSchema, type EmergencyRequestSchemaType } from "../../schemas/request.schema";
 
@@ -11,29 +12,90 @@ const CreateEmergency = () => {
     const navigate = useNavigate();
     const [createEmergency, { isLoading }] = useCreateEmergencyMutation();
 
+    const [isFetchingLocation, setIsFetchingLocation] = useState(false);
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm<EmergencyRequestSchemaType>({
         resolver: zodResolver(emergencyRequestSchema),
     });
+
+    const getCurrentLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setIsFetchingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setValue("latitude", position.coords.latitude);
+                setValue("longitude", position.coords.longitude);
+                setIsFetchingLocation(false);
+                toast.success("Location updated successfully!");
+            },
+            (error) => {
+                console.error("Error fetching location:", error);
+                setIsFetchingLocation(false);
+                toast.error("Failed to fetch location. Please enter manually.");
+            },
+            { enableHighAccuracy: true }
+        );
+    };
+
+    useEffect(() => {
+        getCurrentLocation();
+    }, []);
 
     const onSubmit = async (data: EmergencyRequestSchemaType): Promise<void> => {
         try {
             await createEmergency(data).unwrap();
             toast.success("Emergency request created !!");
             navigate("/patient");
-        } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to create request");
+        } catch (error: unknown) {
+            const fetchError = error as { data?: { message?: string } };
+            toast.error(fetchError?.data?.message || "Failed to create request");
         }
     };
 
     return (
         <div className="max-w-xl rounded-lg bg-white p-8 shadow-md">
-            <h2 className="mb-6 text-3xl font-bold text-red-600">
-                Create Emergency Request
-            </h2>
+            <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-3xl font-bold text-red-600">
+                    Create Emergency Request
+                </h2>
+                <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    disabled={isFetchingLocation}
+                    className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 disabled:opacity-50"
+                >
+                    {isFetchingLocation ? (
+                        <>
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-gray-600"></span>
+                            Fetching...
+                        </>
+                    ) : (
+                        <>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                            Get My Location
+                        </>
+                    )}
+                </button>
+            </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>

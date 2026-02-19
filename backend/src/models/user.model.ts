@@ -72,6 +72,8 @@ const userSchema = new Schema<IUser>(
             type: String,
             required: true,
             unique: true,
+            lowercase: true,
+            trim: true,
         },
 
         phone: {

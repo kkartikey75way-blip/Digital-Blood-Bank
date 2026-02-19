@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createRequest, acceptRequest, getNearbyRequests, completeRequest } from "../controllers/request.controller";
+import { createRequest, acceptRequest, getNearbyRequests, completeRequest, viewMyRequests } from "../controllers/request.controller";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { UserRole } from "../models/user.model";
 import { emergencyRequestLimiter } from "../middlewares/rateLimit.middleware";
@@ -44,6 +44,13 @@ router.patch(
     authenticate,
     authorize(UserRole.DONOR, UserRole.ADMIN),
     completeRequest
+);
+
+router.get(
+    "/my-requests",
+    authenticate,
+    authorize(UserRole.PATIENT),
+    viewMyRequests
 );
 
 export default router;

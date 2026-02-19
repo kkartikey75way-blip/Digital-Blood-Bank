@@ -159,3 +159,6 @@ export const completeEmergencyRequest = async (
 
 
 
+export const getUserRequests = async (userId: string) => {
+    return await BloodRequest.find({ patient: userId }).sort({ createdAt: -1 });
+};

@@ -6,7 +6,7 @@ import { z } from "zod";
 const registerSchema = z.object({
     body: z.object({
         name: z.string().min(2),
-        email: z.string().email(),
+        email: z.string().trim().email().toLowerCase(),
         phone: z.string().min(10),
         password: z.string().min(6),
         role: z.enum(["ADMIN", "DONOR", "PATIENT", "HOSPITAL"]),
@@ -18,7 +18,7 @@ const registerSchema = z.object({
 
 const loginSchema = z.object({
     body: z.object({
-        email: z.string().email(),
+        email: z.string().trim().email().toLowerCase(),
         password: z.string().min(6),
     }),
 });
