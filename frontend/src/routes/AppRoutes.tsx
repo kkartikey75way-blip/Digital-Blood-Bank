@@ -4,7 +4,7 @@ import Loader from "../layouts/Loader";
 import ProtectedRoute from "./ProtectedRoute";
 const DashboardLayout = lazy(() => import("../layouts/DashboardLayout"));
 
-const Landing = lazy(() => import("../pages/Landing"));
+const Landing = lazy(() => import("../pages/landing/LandingPage"));
 const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/auth/Register"));
 
