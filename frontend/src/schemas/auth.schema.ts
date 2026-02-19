@@ -16,12 +16,26 @@ export const registerSchema = z.object({
     bloodGroup: z.string().optional(),
     hospitalName: z.string().optional(),
     licenseNumber: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
 }).refine((data) => {
     if (data.role === "HOSPITAL" && !data.hospitalName) return false;
     return true;
 }, {
-    message: "Hospital name is required for Hospital accounts",
+    message: "Hospital name is required",
     path: ["hospitalName"],
+}).refine((data) => {
+    if ((data.role === "DONOR" || data.role === "HOSPITAL") && !data.latitude) return false;
+    return true;
+}, {
+    message: "Location latitude is missing",
+    path: ["latitude"],
+}).refine((data) => {
+    if ((data.role === "DONOR" || data.role === "HOSPITAL") && !data.longitude) return false;
+    return true;
+}, {
+    message: "Location longitude is missing",
+    path: ["longitude"],
 });
 
 export type LoginSchemaType = z.infer<typeof loginSchema>;

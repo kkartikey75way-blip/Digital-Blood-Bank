@@ -36,6 +36,34 @@ export const requestApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Request"],
         }),
+        fulfillRequest: builder.mutation<{ success: boolean; data: IBloodRequest }, string>({
+            query: (requestId) => ({
+                url: `/requests/${requestId}/fulfill`,
+                method: "PATCH",
+            }),
+            invalidatesTags: ["Request", "Hospital"],
+        }),
+        approveRequest: builder.mutation<{ success: boolean; data: IBloodRequest }, string>({
+            query: (requestId) => ({
+                url: `/requests/${requestId}/approve`,
+                method: "PATCH",
+            }),
+            invalidatesTags: ["Request", "Hospital"],
+        }),
+        rejectRequest: builder.mutation<{ success: boolean; data: IBloodRequest }, string>({
+            query: (requestId) => ({
+                url: `/requests/${requestId}/reject`,
+                method: "PATCH",
+            }),
+            invalidatesTags: ["Request"],
+        }),
+        rejectDonor: builder.mutation<{ success: boolean; data: IBloodRequest }, string>({
+            query: (requestId) => ({
+                url: `/requests/${requestId}/reject-donor`,
+                method: "PATCH",
+            }),
+            invalidatesTags: ["Request"],
+        }),
     }),
 });
 
@@ -44,5 +72,9 @@ export const {
     useGetNearbyRequestsQuery,
     useGetMyRequestsQuery,
     useAcceptRequestMutation,
-    useCompleteRequestMutation
+    useCompleteRequestMutation,
+    useFulfillRequestMutation,
+    useApproveRequestMutation,
+    useRejectRequestMutation,
+    useRejectDonorMutation
 } = requestApi;

@@ -100,3 +100,27 @@ export const login = async (
         });
     }
 };
+export const getProfile = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: req.user,
+        });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to fetch profile";
+        return res.status(400).json({
+            success: false,
+            message,
+        });
+    }
+};

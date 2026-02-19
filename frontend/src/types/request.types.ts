@@ -1,10 +1,11 @@
 import type { IUser } from "./user.types";
 
-export type RequestStatus = "PENDING" | "ACCEPTED" | "COMPLETED" | "CANCELLED";
+export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "CANCELLED";
 export type UrgencyLevel = "LOW" | "MEDIUM" | "HIGH";
 
 export interface CreateEmergencyRequest {
     bloodGroup: string;
+    units: number;
     latitude: number;
     longitude: number;
     urgencyLevel: UrgencyLevel;
@@ -13,8 +14,9 @@ export interface CreateEmergencyRequest {
 export interface IBloodRequest {
     _id: string;
     bloodGroup: string;
+    units: number;
     patient: IUser | string;
-    acceptedBy?: IUser | string;
+    processedBy?: IUser | string;
     status: RequestStatus;
     urgencyLevel: UrgencyLevel;
     location: {

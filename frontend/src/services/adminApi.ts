@@ -34,6 +34,10 @@ export const adminApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Hospital"],
         }),
+        getLowStockHospitals: builder.query<{ success: boolean; count: number; data: IUser[] }, void>({
+            query: () => "/admin/hospitals/low-stock",
+            providesTags: ["Hospital"],
+        }),
     }),
 });
 
@@ -43,5 +47,6 @@ export const {
     useGetAllRequestsQuery,
     useGetPendingHospitalsQuery,
     useApproveHospitalMutation,
-    useRejectHospitalMutation
+    useRejectHospitalMutation,
+    useGetLowStockHospitalsQuery
 } = adminApi;

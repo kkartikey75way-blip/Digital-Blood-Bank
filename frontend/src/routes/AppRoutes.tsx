@@ -9,9 +9,13 @@ const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/auth/Register"));
 
 const PatientDashboard = lazy(() => import("../pages/patient/PatientDashboard"));
-const DonorDashboard = lazy(() => import("../pages/donor/DonorDashboard"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
+const AdminReports = lazy(() => import("../pages/admin/AdminReports"));
 const HospitalDashboard = lazy(() => import("../pages/hospital/HospitalDashboard"));
+const HospitalRequests = lazy(() => import("../pages/hospital/HospitalRequests"));
+const NearbyDonors = lazy(() => import("../pages/hospital/NearbyDonors"));
+const DonorDashboard = lazy(() => import("../pages/donor/DonorDashboard"));
+const NearbyRequests = lazy(() => import("../pages/donor/NearbyRequests"));
 const CreateEmergency = lazy(() => import("../pages/patient/CreateEmergency"));
 
 const withSuspense = (element: ReactNode) => (
@@ -50,16 +54,32 @@ const router = createBrowserRouter([
                 element: withSuspense(<CreateEmergency />),
             },
             {
-                path: "/donor",
-                element: withSuspense(<DonorDashboard />),
-            },
-            {
                 path: "/admin",
                 element: withSuspense(<AdminDashboard />),
             },
             {
+                path: "/admin/reports",
+                element: withSuspense(<AdminReports />),
+            },
+            {
                 path: "/hospital",
                 element: withSuspense(<HospitalDashboard />),
+            },
+            {
+                path: "/hospital/requests",
+                element: withSuspense(<HospitalRequests />),
+            },
+            {
+                path: "/hospital/nearby-donors",
+                element: withSuspense(<NearbyDonors />),
+            },
+            {
+                path: "/donor",
+                element: withSuspense(<DonorDashboard />),
+            },
+            {
+                path: "/donor/nearby",
+                element: withSuspense(<NearbyRequests />),
             },
         ],
     },

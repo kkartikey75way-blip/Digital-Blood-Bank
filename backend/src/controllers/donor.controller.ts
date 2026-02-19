@@ -1,70 +1,66 @@
 import { Request, Response } from "express";
-import { findNearbyDonors } from "../services/donor.service";
+import { findNearbyDonors, searchDonors } from "../services/donor.service";
+import { sendSuccess, sendError } from "../utils/response.utils";
+
+export const searchAllDonors = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        const {
+            latitude,
+            longitude,
+            radius,
+            bloodGroup,
+            city,
+            isAvailable,
+            page,
+            limit,
+            sortBy,
+            sortOrder,
+        } = req.query;
+
+        const results = await searchDonors({
+            latitude: latitude ? Number(latitude) : undefined,
+            longitude: longitude ? Number(longitude) : undefined,
+            radiusInKm: radius ? Number(radius) : undefined,
+            bloodGroup: bloodGroup as string,
+            city: city as string,
+            isAvailable: isAvailable === 'true' ? true : isAvailable === 'false' ? false : undefined,
+            page: page ? Number(page) : 1,
+            limit: limit ? Number(limit) : 10,
+            sortBy: sortBy as string,
+            sortOrder: sortOrder as 'asc' | 'desc',
+        });
+
+        return sendSuccess(res, results, "Donors fetched successfully");
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to search donors";
+        return sendError(res, message);
+    }
+};
 
 export const searchNearbyDonors = async (
     req: Request,
     res: Response
 ): Promise<Response> => {
     try {
-        const query = req.query as unknown;
+        const { latitude, longitude, radius, bloodGroup } = req.query;
 
-        if (
-            typeof query !== "object" ||
-            query === null ||
-            !("latitude" in query) ||
-            !("longitude" in query) ||
-            !("radius" in query) ||
-            !("bloodGroup" in query)
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Missing required query parameters",
-            });
-        }
-
-        const { latitude, longitude, radius, bloodGroup } =
-            query as {
-                latitude: string;
-                longitude: string;
-                radius: string;
-                bloodGroup: string;
-            };
-
-        if (
-            !latitude ||
-            !longitude ||
-            !radius ||
-            !bloodGroup
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid query parameters",
-            });
+        if (!latitude || !longitude || !radius || !bloodGroup) {
+            return sendError(res, "Missing required geospatial parameters", 400);
         }
 
         const donors = await findNearbyDonors({
             latitude: Number(latitude),
             longitude: Number(longitude),
             radiusInKm: Number(radius),
-            bloodGroup,
+            bloodGroup: bloodGroup as string,
         });
 
-        return res.status(200).json({
-            success: true,
-            count: donors.length,
-            data: donors,
-        });
+        return sendSuccess(res, donors, "Nearby donors fetched successfully");
     } catch (error: unknown) {
-        if (error instanceof Error) {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
-            });
-        }
-
-        return res.status(400).json({
-            success: false,
-            message: "Failed to search donors",
-        });
+        const message = error instanceof Error ? error.message : "Failed to search nearby donors";
+        return sendError(res, message);
     }
 };

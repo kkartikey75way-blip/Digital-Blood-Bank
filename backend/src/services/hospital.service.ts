@@ -1,5 +1,7 @@
 import { User, UserRole, IBloodStock } from "../models/user.model";
 import { getLowStockGroups } from "../utils/stock.utils";
+import { logActivity } from "./activity.service";
+import { ActivityType } from "../models/activity.model";
 
 const bloodGroupMap: Record<string, keyof IBloodStock> = {
     "A+": "A_POS",
@@ -67,6 +69,13 @@ export const updateBloodStock = async (
 
     await hospital.save();
 
+    await logActivity(
+        hospitalId,
+        ActivityType.STOCK_UPDATE,
+        "Stock Modified",
+        `Updated ${bloodGroup} stock by ${units} units`
+    );
+
     return hospital.bloodStock;
 };
 
@@ -79,14 +88,23 @@ export const getBloodStock = async (
         throw new Error("Hospital not found");
     }
 
-    if (!hospital.isVerified) {
-        throw new Error("Hospital not verified by admin");
-    }
+    const defaultStock: IBloodStock = {
+        A_POS: 0,
+        A_NEG: 0,
+        B_POS: 0,
+        B_NEG: 0,
+        O_POS: 0,
+        O_NEG: 0,
+        AB_POS: 0,
+        AB_NEG: 0,
+    };
 
-    const lowStock = getLowStockGroups(hospital.bloodStock);
+    const stock = hospital.bloodStock || defaultStock;
+    const lowStock = getLowStockGroups(stock);
 
     return {
-        bloodStock: hospital.bloodStock,
+        bloodStock: stock,
         lowStockGroups: lowStock,
+        isVerified: hospital.isVerified,
     };
 };

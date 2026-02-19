@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { refreshToken, register, login } from "../controllers/auth.controller";
+import { refreshToken, register, login, getProfile } from "../controllers/auth.controller";
+import { authenticate } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { z } from "zod";
 
@@ -34,5 +35,6 @@ const router = Router();
 router.post("/refresh", validate(refreshSchema), refreshToken);
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
+router.get("/me", authenticate, getProfile);
 
 export default router;

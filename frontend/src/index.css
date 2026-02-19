@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 @theme {
   --color-primary: #dc2626;
   --color-primary-dark: #991b1b;
   --color-primary-light: #fef2f2;
   --color-accent: #f87171;
-  
+
   --shadow-premium: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
@@ -21,15 +22,15 @@
   .glass-card {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-glass;
   }
-  
+
   .btn-primary {
     @apply bg-primary text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:bg-primary-dark hover:shadow-lg active:scale-95 disabled:opacity-50;
   }
-  
+
   .btn-outline {
     @apply border-2 border-primary text-primary px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:bg-primary-light active:scale-95;
   }
-  
+
   .input-field {
     @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200;
   }
@@ -41,9 +42,17 @@
 
 /* Custom Animations */
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .animate-float {

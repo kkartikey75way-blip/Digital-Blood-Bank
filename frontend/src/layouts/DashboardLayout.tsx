@@ -11,7 +11,6 @@ import {
     LogOut,
     Menu,
     X,
-    Bell,
     User as UserIcon,
     ChevronRight,
     Droplets,
@@ -20,6 +19,7 @@ import {
 import { useState } from "react";
 import { getUserRole, clearAuthStorage } from "../utils/auth";
 import type { UserRole } from "../types/auth.types";
+import NotificationBell from "../components/common/NotificationBell";
 
 const DashboardLayout = () => {
     const navigate = useNavigate();
@@ -45,6 +45,7 @@ const DashboardLayout = () => {
         HOSPITAL: [
             { label: "Manage Stock", path: "/hospital", icon: Hospital },
             { label: "Blood Requests", path: "/hospital/requests", icon: Droplets },
+            { label: "Nearby Donors", path: "/hospital/nearby-donors", icon: Search },
         ],
         ADMIN: [
             { label: "Admin Panel", path: "/admin", icon: Users },
@@ -162,10 +163,7 @@ const DashboardLayout = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 relative transition-colors">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full border-2 border-white" />
-                        </button>
+                        <NotificationBell />
                         <div className="h-10 w-px bg-slate-200 mx-2" />
                         <div className="flex items-center gap-3">
                             <div className="text-right hidden sm:block">

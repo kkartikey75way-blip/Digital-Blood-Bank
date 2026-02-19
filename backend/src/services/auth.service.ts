@@ -5,6 +5,8 @@ import {
     generateRefreshToken,
 } from "../utils/jwt";
 import jwt from "jsonwebtoken";
+import { logActivity } from "./activity.service";
+import { ActivityType } from "../models/activity.model";
 
 interface RefreshTokenPayload {
     id: string;
@@ -37,8 +39,14 @@ export const refreshAccessToken = async (token: string) => {
 };
 
 
-export const registerUser = async (data: Partial<IUser>) => {
-    const existingUser = await User.findOne({ email: data.email });
+interface RegisterData extends Partial<IUser> {
+    latitude?: number;
+    longitude?: number;
+}
+
+export const registerUser = async (data: RegisterData) => {
+    const normalizedEmail = data.email?.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
         throw new Error("User already exists");
@@ -46,10 +54,21 @@ export const registerUser = async (data: Partial<IUser>) => {
 
     const hashedPassword = await bcrypt.hash(data.password as string, 10);
 
-    const user = await User.create({
+    const userData: RegisterData & { location?: { type: string; coordinates: number[] } } = {
         ...data,
         password: hashedPassword,
-    });
+    };
+
+    if (data.latitude && data.longitude) {
+        userData.location = {
+            type: "Point",
+            coordinates: [data.longitude, data.latitude],
+        };
+        delete userData.latitude;
+        delete userData.longitude;
+    }
+
+    const user = await User.create(userData);
 
     const accessToken = generateAccessToken(
         user._id.toString(),
@@ -65,7 +84,8 @@ export const registerUser = async (data: Partial<IUser>) => {
 };
 
 export const loginUser = async (email: string, password: string) => {
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
         throw new Error("Invalid credentials");
@@ -86,6 +106,13 @@ export const loginUser = async (email: string, password: string) => {
 
     user.refreshToken = refreshToken;
     await user.save();
+
+    await logActivity(
+        user._id.toString(),
+        ActivityType.LOGIN,
+        "Login",
+        `User ${user.email} logged in successfully`
+    );
 
     return { user, accessToken, refreshToken };
 };

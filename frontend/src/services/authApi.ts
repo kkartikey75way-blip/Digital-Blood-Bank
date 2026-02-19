@@ -1,5 +1,6 @@
 import { baseApi } from "./baseApi";
 import type { LoginRequest, LoginResponse, RegisterRequest } from "../types/auth.types";
+import type { IUser } from "../types/user.types";
 
 export const authApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
@@ -18,7 +19,11 @@ export const authApi = baseApi.injectEndpoints({
                 body: userData,
             }),
         }),
+        getProfile: builder.query<{ success: boolean; data: IUser }, void>({
+            query: () => "/auth/me",
+            providesTags: ["User"],
+        }),
     }),
 });
 
-export const { useLoginMutation, useRegisterMutation } = authApi;
+export const { useLoginMutation, useRegisterMutation, useGetProfileQuery } = authApi;

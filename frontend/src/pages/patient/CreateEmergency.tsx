@@ -2,9 +2,9 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
 import { useCreateEmergencyMutation } from "../../services/requestApi";
 import { emergencyRequestSchema, type EmergencyRequestSchemaType } from "../../schemas/request.schema";
+import LocationPicker from "../../components/common/LocationPicker";
 
 const BLOOD_GROUPS: string[] = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
@@ -12,46 +12,30 @@ const CreateEmergency = () => {
     const navigate = useNavigate();
     const [createEmergency, { isLoading }] = useCreateEmergencyMutation();
 
-    const [isFetchingLocation, setIsFetchingLocation] = useState(false);
     const {
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors },
     } = useForm<EmergencyRequestSchemaType>({
         resolver: zodResolver(emergencyRequestSchema),
     });
 
-    const getCurrentLocation = () => {
-        if (!navigator.geolocation) {
-            toast.error("Geolocation is not supported by your browser");
-            return;
-        }
+    const latitude = watch("latitude");
+    const longitude = watch("longitude");
 
-        setIsFetchingLocation(true);
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setValue("latitude", position.coords.latitude);
-                setValue("longitude", position.coords.longitude);
-                setIsFetchingLocation(false);
-                toast.success("Location updated successfully!");
-            },
-            (error) => {
-                console.error("Error fetching location:", error);
-                setIsFetchingLocation(false);
-                toast.error("Failed to fetch location. Please enter manually.");
-            },
-            { enableHighAccuracy: true }
-        );
+    const onLocationSelect = (lat: number, lng: number) => {
+        setValue("latitude", lat);
+        setValue("longitude", lng);
     };
-
-    useEffect(() => {
-        getCurrentLocation();
-    }, []);
 
     const onSubmit = async (data: EmergencyRequestSchemaType): Promise<void> => {
         try {
-            await createEmergency(data).unwrap();
+            await createEmergency({
+                ...data,
+                units: Number(data.units)
+            }).unwrap();
             toast.success("Emergency request created !!");
             navigate("/patient");
         } catch (error: unknown) {
@@ -61,50 +45,22 @@ const CreateEmergency = () => {
     };
 
     return (
-        <div className="max-w-xl rounded-lg bg-white p-8 shadow-md">
-            <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-3xl font-bold text-red-600">
+        <div className="max-w-xl mx-auto rounded-[2.5rem] bg-white p-10 shadow-xl shadow-slate-200 border border-slate-100">
+            <div className="mb-10 text-center">
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">
                     Create Emergency Request
                 </h2>
-                <button
-                    type="button"
-                    onClick={getCurrentLocation}
-                    disabled={isFetchingLocation}
-                    className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 disabled:opacity-50"
-                >
-                    {isFetchingLocation ? (
-                        <>
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-gray-600"></span>
-                            Fetching...
-                        </>
-                    ) : (
-                        <>
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            Get My Location
-                        </>
-                    )}
-                </button>
+                <p className="text-slate-500 mt-2">Mark your location and specify your needs.</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-2 block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
                         Blood Group Required
                     </label>
                     <select
                         {...register("bloodGroup")}
-                        className={`w-full rounded-lg border p-3 outline-none transition focus:ring-2 focus:ring-red-500 ${errors.bloodGroup ? "border-red-500" : "border-gray-200"
+                        className={`w-full rounded-2xl border-2 p-4 outline-none transition focus:ring-4 focus:ring-red-500/10 font-bold ${errors.bloodGroup ? "border-red-500" : "border-slate-100 focus:border-red-600"
                             }`}
                     >
                         <option value="">Select Blood Group</option>
@@ -115,53 +71,49 @@ const CreateEmergency = () => {
                         ))}
                     </select>
                     {errors.bloodGroup && (
-                        <p className="mt-1 text-sm text-red-500">{errors.bloodGroup.message}</p>
+                        <p className="mt-2 text-xs text-red-500 font-bold ml-1">{errors.bloodGroup.message}</p>
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Latitude
-                        </label>
-                        <input
-                            type="number"
-                            step="any"
-                            placeholder="Latitude"
-                            {...register("latitude", { valueAsNumber: true })}
-                            className={`w-full rounded-lg border p-3 outline-none transition focus:ring-2 focus:ring-red-500 ${errors.latitude ? "border-red-500" : "border-gray-200"
-                                }`}
-                        />
-                        {errors.latitude && (
-                            <p className="mt-1 text-sm text-red-500">{errors.latitude.message}</p>
-                        )}
-                    </div>
+                <div>
+                    <label className="mb-2 block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                        Units Required
+                    </label>
+                    <input
+                        type="number"
+                        {...register("units", { valueAsNumber: true })}
+                        placeholder="e.g. 2"
+                        className={`w-full rounded-2xl border-2 p-4 outline-none transition focus:ring-4 focus:ring-red-500/10 font-bold ${errors.units ? "border-red-500" : "border-slate-100 focus:border-red-600"
+                            }`}
+                    />
+                    {errors.units && (
+                        <p className="mt-2 text-xs text-red-500 font-bold ml-1">{errors.units.message}</p>
+                    )}
+                </div>
 
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Longitude
-                        </label>
-                        <input
-                            type="number"
-                            step="any"
-                            placeholder="Longitude"
-                            {...register("longitude", { valueAsNumber: true })}
-                            className={`w-full rounded-lg border p-3 outline-none transition focus:ring-2 focus:ring-red-500 ${errors.longitude ? "border-red-500" : "border-gray-200"
-                                }`}
+                <div className="space-y-2">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                        Hospital Location
+                    </label>
+                    <div className="rounded-2xl overflow-hidden border-2 border-slate-100">
+                        <LocationPicker
+                            latitude={latitude}
+                            longitude={longitude}
+                            onLocationSelect={onLocationSelect}
                         />
-                        {errors.longitude && (
-                            <p className="mt-1 text-sm text-red-500">{errors.longitude.message}</p>
-                        )}
                     </div>
+                    {(errors.latitude || errors.longitude) && (
+                        <p className="text-[10px] text-red-500 font-black uppercase tracking-wider ml-1">Please select location on map</p>
+                    )}
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-2 block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
                         Urgency Level
                     </label>
                     <select
                         {...register("urgencyLevel")}
-                        className={`w-full rounded-lg border p-3 outline-none transition focus:ring-2 focus:ring-red-500 ${errors.urgencyLevel ? "border-red-500" : "border-gray-200"
+                        className={`w-full rounded-2xl border-2 p-4 outline-none transition focus:ring-4 focus:ring-red-500/10 font-bold ${errors.urgencyLevel ? "border-red-500" : "border-slate-100 focus:border-red-600"
                             }`}
                     >
                         <option value="">Select Urgency</option>
@@ -170,14 +122,14 @@ const CreateEmergency = () => {
                         <option value="HIGH">High</option>
                     </select>
                     {errors.urgencyLevel && (
-                        <p className="mt-1 text-sm text-red-500">{errors.urgencyLevel.message}</p>
+                        <p className="mt-2 text-xs text-red-500 font-bold ml-1">{errors.urgencyLevel.message}</p>
                     )}
                 </div>
 
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full rounded-lg bg-red-600 py-4 font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+                    className="w-full rounded-2xl bg-red-600 py-5 font-black text-white transition hover:bg-slate-900 disabled:opacity-50 shadow-xl shadow-red-200 active:scale-[0.98]"
                 >
                     {isLoading ? "Creating Request..." : "Create Emergency"}
                 </button>

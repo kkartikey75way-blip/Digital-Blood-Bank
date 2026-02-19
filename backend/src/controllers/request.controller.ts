@@ -5,10 +5,16 @@ import {
     findNearbyEmergencyRequests,
     completeEmergencyRequest,
     getUserRequests,
+    approveRequest,
+    rejectRequest,
+    fulfillRequest,
+    rejectDonor,
 } from "../services/request.service";
+import { sendSuccess, sendError } from "../utils/response.utils";
 
 interface CreateRequestBody {
     bloodGroup: string;
+    units: number;
     latitude: number;
     longitude: number;
     urgencyLevel: "LOW" | "MEDIUM" | "HIGH";
@@ -20,39 +26,63 @@ export const createRequest = async (
 ): Promise<Response> => {
     try {
         if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized",
-            });
+            return sendError(res, "Unauthorized", 401);
         }
 
-        const { bloodGroup, latitude, longitude, urgencyLevel } =
+        const { bloodGroup, units, latitude, longitude, urgencyLevel } =
             req.body as CreateRequestBody;
 
         const request = await createEmergencyRequest(
             req.user.id,
             bloodGroup,
+            units,
             latitude,
             longitude,
             urgencyLevel
         );
 
-        return res.status(201).json({
-            success: true,
-            data: request,
-        });
+        return sendSuccess(res, request, "Request created successfully", 201);
     } catch (error: unknown) {
-        if (error instanceof Error) {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
-            });
+        const message = error instanceof Error ? error.message : "Failed to create request";
+        return sendError(res, message);
+    }
+};
+
+export const approveHospitalRequest = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        if (!req.user || req.user.role !== "HOSPITAL") {
+            return sendError(res, "Unauthorized", 401);
         }
 
-        return res.status(400).json({
-            success: false,
-            message: "Failed to create request",
-        });
+        const { requestId } = req.params;
+        const request = await approveRequest(requestId as string, req.user.id);
+
+        return sendSuccess(res, request, "Request approved and stock updated");
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to approve request";
+        return sendError(res, message);
+    }
+};
+
+export const rejectHospitalRequest = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        if (!req.user) {
+            return sendError(res, "Unauthorized", 401);
+        }
+
+        const { requestId } = req.params;
+        const request = await rejectRequest(requestId as string, req.user.id);
+
+        return sendSuccess(res, request, "Request rejected");
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to reject request";
+        return sendError(res, message);
     }
 };
 
@@ -62,10 +92,7 @@ export const acceptRequest = async (
 ): Promise<Response> => {
     try {
         if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized",
-            });
+            return sendError(res, "Unauthorized", 401);
         }
 
         const { requestId } = req.params;
@@ -75,22 +102,10 @@ export const acceptRequest = async (
             req.user.id
         );
 
-        return res.status(200).json({
-            success: true,
-            data: updatedRequest,
-        });
+        return sendSuccess(res, updatedRequest, "Request accepted");
     } catch (error: unknown) {
-        if (error instanceof Error) {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
-            });
-        }
-
-        return res.status(400).json({
-            success: false,
-            message: "Failed to accept request",
-        });
+        const message = error instanceof Error ? error.message : "Failed to accept request";
+        return sendError(res, message);
     }
 };
 
@@ -100,10 +115,7 @@ export const getNearbyRequests = async (
 ): Promise<Response> => {
     try {
         if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized",
-            });
+            return sendError(res, "Unauthorized", 401);
         }
 
         const { latitude, longitude, radius, bloodGroup } =
@@ -118,26 +130,36 @@ export const getNearbyRequests = async (
             Number(latitude),
             Number(longitude),
             Number(radius),
-            bloodGroup
+            bloodGroup as string
         );
 
-        return res.status(200).json({
-            success: true,
-            count: requests.length,
-            data: requests,
-        });
+        return sendSuccess(res, requests, "Nearby requests fetched");
     } catch (error: unknown) {
-        if (error instanceof Error) {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
-            });
+        const message = error instanceof Error ? error.message : "Failed to fetch requests";
+        return sendError(res, message);
+    }
+};
+
+export const rejectDonorController = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        if (!req.user) {
+            return sendError(res, "Unauthorized", 401);
         }
 
-        return res.status(400).json({
-            success: false,
-            message: "Failed to fetch requests",
-        });
+        const { requestId } = req.params;
+
+        const result = await rejectDonor(
+            requestId as string,
+            req.user.id
+        );
+
+        return sendSuccess(res, result, "Donor rejected successfully");
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to reject donor";
+        return sendError(res, message);
     }
 };
 
@@ -147,10 +169,7 @@ export const completeRequest = async (
 ): Promise<Response> => {
     try {
         if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized",
-            });
+            return sendError(res, "Unauthorized", 401);
         }
 
         const { requestId } = req.params;
@@ -160,22 +179,10 @@ export const completeRequest = async (
             req.user.id
         );
 
-        return res.status(200).json({
-            success: true,
-            data: result,
-        });
+        return sendSuccess(res, result, "Request completed");
     } catch (error: unknown) {
-        if (error instanceof Error) {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
-            });
-        }
-
-        return res.status(400).json({
-            success: false,
-            message: "Failed to complete request",
-        });
+        const message = error instanceof Error ? error.message : "Failed to complete request";
+        return sendError(res, message);
     }
 };
 
@@ -185,30 +192,34 @@ export const viewMyRequests = async (
 ): Promise<Response> => {
     try {
         if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized",
-            });
+            return sendError(res, "Unauthorized", 401);
         }
 
         const requests = await getUserRequests(req.user.id);
 
-        return res.status(200).json({
-            success: true,
-            data: requests,
-        });
+        return sendSuccess(res, requests, "Your requests fetched");
     } catch (error: unknown) {
-        if (error instanceof Error) {
-            return res.status(400).json({
-                success: false,
-                message: error.message,
-            });
-        }
-
-        return res.status(400).json({
-            success: false,
-            message: "Failed to fetch your requests",
-        });
+        const message = error instanceof Error ? error.message : "Failed to fetch your requests";
+        return sendError(res, message);
     }
 };
 
+export const fulfillHospitalRequest = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        const { requestId } = req.params;
+        const hospitalId = req.user?.id;
+
+        const request = await fulfillRequest(
+            requestId as string,
+            hospitalId as string
+        );
+
+        return sendSuccess(res, request, "Request marked as fulfilled");
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Fulfillment failed";
+        return sendError(res, message);
+    }
+};

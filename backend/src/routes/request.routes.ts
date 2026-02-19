@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createRequest, acceptRequest, getNearbyRequests, completeRequest, viewMyRequests } from "../controllers/request.controller";
+import { createRequest, acceptRequest, getNearbyRequests, completeRequest, viewMyRequests, approveHospitalRequest, rejectHospitalRequest, fulfillHospitalRequest, rejectDonorController } from "../controllers/request.controller";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { UserRole } from "../models/user.model";
 import { emergencyRequestLimiter } from "../middlewares/rateLimit.middleware";
@@ -9,6 +9,7 @@ import { z } from "zod";
 const createEmergencySchema = z.object({
     body: z.object({
         bloodGroup: z.string(),
+        units: z.number().min(1),
         latitude: z.number(),
         longitude: z.number(),
         urgencyLevel: z.enum(["LOW", "MEDIUM", "HIGH"]),
@@ -44,6 +45,34 @@ router.patch(
     authenticate,
     authorize(UserRole.DONOR, UserRole.ADMIN),
     completeRequest
+);
+
+router.patch(
+    "/:requestId/reject-donor",
+    authenticate,
+    authorize(UserRole.PATIENT),
+    rejectDonorController
+);
+
+router.patch(
+    "/:requestId/approve",
+    authenticate,
+    authorize(UserRole.HOSPITAL),
+    approveHospitalRequest
+);
+
+router.patch(
+    "/:requestId/reject",
+    authenticate,
+    authorize(UserRole.HOSPITAL),
+    rejectHospitalRequest
+);
+
+router.patch(
+    "/:requestId/fulfill",
+    authenticate,
+    authorize(UserRole.HOSPITAL),
+    fulfillHospitalRequest
 );
 
 router.get(

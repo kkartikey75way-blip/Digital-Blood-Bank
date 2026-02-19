@@ -3,7 +3,7 @@ import type { IBloodStock } from "../types/user.types";
 
 export const hospitalApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        getStock: builder.query<{ success: boolean; data: { bloodStock: IBloodStock, lowStockGroups: string[] } }, void>({
+        getStock: builder.query<{ success: boolean; data: { bloodStock: IBloodStock, lowStockGroups: string[], isVerified: boolean } }, void>({
             query: () => "/hospitals/stock",
             providesTags: ["Stock"],
         }),

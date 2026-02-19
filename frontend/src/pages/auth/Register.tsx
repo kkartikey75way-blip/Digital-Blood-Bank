@@ -6,6 +6,7 @@ import { Heart, User, Mail, Phone, Lock, ChevronRight, ArrowLeft, Hospital, Drop
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegisterMutation } from "../../services/authApi";
 import { registerSchema, type RegisterSchemaType } from "../../schemas/auth.schema";
+import LocationPicker from "../../components/common/LocationPicker";
 
 const BLOOD_GROUPS: string[] = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
@@ -17,12 +18,20 @@ const Register = () => {
         register,
         handleSubmit,
         watch,
+        setValue,
         formState: { errors },
     } = useForm<RegisterSchemaType>({
         resolver: zodResolver(registerSchema),
     });
 
     const selectedRole = watch("role");
+    const latitude = watch("latitude");
+    const longitude = watch("longitude");
+
+    const onLocationSelect = (lat: number, lng: number) => {
+        setValue("latitude", lat);
+        setValue("longitude", lng);
+    };
 
     const onSubmit = async (data: RegisterSchemaType): Promise<void> => {
         try {
@@ -207,6 +216,32 @@ const Register = () => {
                                         />
                                     </div>
                                     {errors.licenseNumber && <p className="text-xs text-red-500 ml-1 text-xs">{errors.licenseNumber.message}</p>}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {(selectedRole === "DONOR" || selectedRole === "HOSPITAL") && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="space-y-4 overflow-hidden"
+                            >
+                                <div className="border-t border-slate-100 pt-6 mt-2">
+                                    <LocationPicker
+                                        latitude={latitude as number}
+                                        longitude={longitude as number}
+                                        onLocationSelect={onLocationSelect}
+                                    />
+                                    {errors.latitude && (
+                                        <p className="text-xs text-red-500 font-bold ml-1 mt-2">{errors.latitude.message}</p>
+                                    )}
+                                    {errors.longitude && (
+                                        <p className="text-xs text-red-500 font-bold ml-1 mt-2">{errors.longitude.message}</p>
+                                    )}
+                                    {(errors.latitude || errors.longitude) && !errors.latitude?.message && !errors.longitude?.message && (
+                                        <p className="text-xs text-red-500 font-bold ml-1 mt-2">Please mark your exact location on the map.</p>
+                                    )}
                                 </div>
                             </motion.div>
                         )}
