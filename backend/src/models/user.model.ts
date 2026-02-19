@@ -44,6 +44,8 @@ export interface IUser extends Document {
     // Common fields
     isVerified: boolean;
     isBlocked: boolean;
+    impactPoints: number;
+    rank: string;
     refreshToken?: string;
 }
 
@@ -146,6 +148,14 @@ const userSchema = new Schema<IUser>(
         isBlocked: {
             type: Boolean,
             default: false,
+        },
+        impactPoints: {
+            type: Number,
+            default: 0,
+        },
+        rank: {
+            type: String,
+            default: "Novice",
         },
 
         refreshToken: {

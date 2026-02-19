@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+
+button {
+  cursor: pointer;
+}
+
 @theme {
   --color-primary: #dc2626;
   --color-primary-dark: #991b1b;
@@ -20,41 +25,104 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-glass;
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-glass;
+  }
+
+  .glass-card-dark {
+    @apply bg-slate-900/40 backdrop-blur-xl border border-white/5 shadow-2xl;
   }
 
   .btn-primary {
-    @apply bg-primary text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:bg-primary-dark hover:shadow-lg active:scale-95 disabled:opacity-50;
+    @apply bg-primary text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:bg-primary-dark hover:shadow-xl hover:shadow-red-200 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2;
   }
 
   .btn-outline {
-    @apply border-2 border-primary text-primary px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 hover:bg-primary-light active:scale-95;
+    @apply border-2 border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:bg-slate-50 hover:border-slate-300 active:scale-95 flex items-center justify-center gap-2;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200;
+    @apply w-full px-5 py-4 rounded-2xl border-2 border-slate-100 bg-white/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-300 font-medium;
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-rose-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 animate-gradient-x;
+  }
+
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    @apply content-[''] absolute inset-0 -translate-x-full;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
   }
 }
 
 /* Custom Animations */
 @keyframes float {
   0% {
-    transform: translateY(0px);
+    transform: translateY(0px) rotate(0deg);
   }
 
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-15px) rotate(1deg);
   }
 
   100% {
-    transform: translateY(0px);
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes gradient-x {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
   }
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 15s ease infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.bg-mesh {
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(at 0% 0%, hsla(0, 100%, 98%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(0, 72%, 94%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(210, 100%, 98%, 1) 0, transparent 50%);
 }

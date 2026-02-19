@@ -24,8 +24,8 @@ export const createEmergencyRequest = async (
     }
     const user = await User.findById(userId);
 
-    if (!user || user.role !== UserRole.PATIENT) {
-        throw new Error("Only patients can create emergency requests");
+    if (!user || (user.role !== UserRole.PATIENT && user.role !== UserRole.HOSPITAL)) {
+        throw new Error("Only patients and hospitals can create blood requests");
     }
 
     if (user.isBlocked) {
@@ -297,6 +297,15 @@ export const completeEmergencyRequest = async (
     if (donor) {
         donor.lastDonationDate = new Date();
         donor.isAvailable = false;
+
+        // Award Impact Points
+        donor.impactPoints = (donor.impactPoints || 0) + 10;
+
+        // Update Rank
+        if (donor.impactPoints > 150) donor.rank = "Hero";
+        else if (donor.impactPoints > 50) donor.rank = "Life Saver";
+        else donor.rank = "Novice";
+
         await donor.save();
     }
 

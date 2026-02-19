@@ -24,6 +24,8 @@ export interface IUser {
     role: UserRole;
     isVerified: boolean;
     isBlocked: boolean;
+    impactPoints: number;
+    rank: string;
 
     // Donor fields
     bloodGroup?: string;

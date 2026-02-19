@@ -1,6 +1,7 @@
 import { X, Loader2 } from "lucide-react";
 import StatusTimeline from "../../../components/common/StatusTimeline";
 import type { IBloodRequest } from "../../../types/request.types";
+import type { IUser } from "../../../types/user.types";
 
 interface RequestInsightModalProps {
     request: IBloodRequest;
@@ -19,6 +20,8 @@ const RequestInsightModal = ({
     onComplete,
     onRejectDonor
 }: RequestInsightModalProps) => {
+    const processedBy = typeof request.processedBy === 'object' ? (request.processedBy as IUser) : null;
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
             <div className="bg-white rounded-[3rem] p-10 w-full max-w-lg shadow-2xl relative overflow-y-auto max-h-[90vh]">
@@ -39,7 +42,7 @@ const RequestInsightModal = ({
 
                 <div className="space-y-8">
                     {/* Donor Details Section */}
-                    {request.status === 'APPROVED' && request.processedBy && typeof request.processedBy === 'object' && (
+                    {request.status === 'APPROVED' && processedBy && (
                         <div className="p-6 bg-green-50 rounded-[2rem] border border-green-100 relative overflow-hidden">
                             <div className="relative z-10">
                                 <h4 className="text-xs font-black text-green-600 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -48,11 +51,11 @@ const RequestInsightModal = ({
                                 </h4>
                                 <div className="flex items-center gap-4 mb-4">
                                     <div className="w-12 h-12 rounded-full bg-white text-green-600 flex items-center justify-center font-bold text-lg shadow-sm">
-                                        {(request.processedBy as any).name?.charAt(0) || 'H'}
+                                        {processedBy.name?.charAt(0) || 'H'}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900 text-lg">{(request.processedBy as any).name}</p>
-                                        <p className="text-sm text-slate-500 font-medium">{(request.processedBy as any).phone}</p>
+                                        <p className="font-bold text-slate-900 text-lg">{processedBy.name}</p>
+                                        <p className="text-sm text-slate-500 font-medium">{processedBy.phone}</p>
                                     </div>
                                 </div>
                                 <div className="text-xs font-bold text-green-700 bg-white/50 p-3 rounded-xl border border-green-100">

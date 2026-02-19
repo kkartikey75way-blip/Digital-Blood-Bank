@@ -21,7 +21,7 @@ const router = Router();
 router.post(
     "/",
     authenticate,
-    authorize(UserRole.PATIENT),
+    authorize(UserRole.PATIENT, UserRole.HOSPITAL),
     emergencyRequestLimiter,
     validate(createEmergencySchema),
     createRequest

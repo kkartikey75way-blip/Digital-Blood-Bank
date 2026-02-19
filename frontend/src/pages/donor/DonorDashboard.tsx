@@ -1,4 +1,5 @@
-import { MapPin } from "lucide-react";
+import { motion } from "framer-motion";
+import { MapPin, Activity, Zap } from "lucide-react";
 import { useGetDonationHistoryQuery } from "../../services/donorApi";
 import { useGetNearbyRequestsQuery, useAcceptRequestMutation, useCompleteRequestMutation } from "../../services/requestApi";
 import { useGetProfileQuery } from "../../services/authApi";
@@ -69,28 +70,45 @@ const DonorDashboard = () => {
     const nearbyRequests = nearbyData?.data || [];
 
     return (
-        <div className="space-y-8">
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-12"
+        >
             {/* Greeting */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-900">Hello, Hero! 🌟</h2>
-                    <p className="text-slate-500 mt-1">Your contributions are making a difference every day.</p>
+                    <h2 className="text-4xl font-black text-slate-900 tracking-tight">Champion's Hub</h2>
+                    <div className="flex items-center gap-3 mt-2">
+                        <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-2">
+                            <Zap className="w-3 h-3 text-amber-500" /> Legend Status: Active
+                        </p>
+                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                        <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-2">
+                            <Activity className="w-3 h-3 text-red-600" /> Pulse: Optimal
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                     <button
                         onClick={handleFetchLocation}
-                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-2xl text-xs flex items-center gap-2 transition-all active:scale-95 border border-slate-200"
+                        className="flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-100 text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl hover:border-slate-200 transition-all active:scale-95 shadow-xl shadow-slate-50"
                     >
-                        <MapPin className="w-4 h-4" /> Refresh Location
+                        <MapPin className="w-4 h-4 text-red-600" /> Scan Proximity
                     </button>
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <DonorStats historyLength={history.length} isLoading={isHistoryLoading} />
+            <DonorStats
+                historyLength={history.length}
+                impactPoints={profileData?.data?.impactPoints || 0}
+                rank={profileData?.data?.rank || "Novice"}
+                isLoading={isHistoryLoading}
+            />
 
             {/* Main Content Grid */}
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-10">
                 {/* Nearby Requests Column */}
                 <NearbyRequestsList
                     requests={nearbyRequests}
@@ -105,7 +123,7 @@ const DonorDashboard = () => {
                 {/* Impact History Sidebar */}
                 <ImpactHistory history={history} isLoading={isHistoryLoading} />
             </div>
-        </div>
+        </motion.div>
     );
 };
 
