@@ -8,6 +8,7 @@ export enum UserRole {
 }
 
 // Blood Stock Type
+// Blood Stock Interface (moved to bloodStock.model.ts)
 export interface IBloodStock {
     A_POS: number;
     A_NEG: number;
@@ -39,29 +40,17 @@ export interface IUser extends Document {
     hospitalName?: string;
     hospitalAddress?: string;
     licenseNumber?: string;
-    bloodStock?: IBloodStock;
 
     // Common fields
     isVerified: boolean;
     isBlocked: boolean;
     impactPoints: number;
     rank: string;
+    badges: string[];
     refreshToken?: string;
 }
 
-const bloodStockSchema = new Schema<IBloodStock>(
-    {
-        A_POS: { type: Number, default: 0 },
-        A_NEG: { type: Number, default: 0 },
-        B_POS: { type: Number, default: 0 },
-        B_NEG: { type: Number, default: 0 },
-        O_POS: { type: Number, default: 0 },
-        O_NEG: { type: Number, default: 0 },
-        AB_POS: { type: Number, default: 0 },
-        AB_NEG: { type: Number, default: 0 },
-    },
-    { _id: false }
-);
+
 
 const userSchema = new Schema<IUser>(
     {
@@ -133,10 +122,7 @@ const userSchema = new Schema<IUser>(
             type: String,
         },
 
-        bloodStock: {
-            type: bloodStockSchema,
-            default: () => ({}),
-        },
+
 
         //Common Fields
 
@@ -156,6 +142,10 @@ const userSchema = new Schema<IUser>(
         rank: {
             type: String,
             default: "Novice",
+        },
+        badges: {
+            type: [String],
+            default: [],
         },
 
         refreshToken: {

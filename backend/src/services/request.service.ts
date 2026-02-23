@@ -1,12 +1,14 @@
 import mongoose from "mongoose";
 import { BloodRequest, RequestStatus } from "../models/request.model";
-import { User, UserRole, IBloodStock } from "../models/user.model";
+import { User, UserRole } from "../models/user.model";
+import { BloodStock, IBloodStock } from "../models/bloodStock.model";
 import { Donation } from "../models/donation.model";
 import { getIO } from "../utils/io";
 import { createNotification, notifyUrgentNearby } from "./notification.service";
 import { NotificationType } from "../models/notification.model";
 import { logActivity } from "./activity.service";
 import { ActivityType } from "../models/activity.model";
+import { getCompatibleRecipients, BloodGroup } from "../utils/compatibility.utils";
 
 export const createEmergencyRequest = async (
     userId: string,
@@ -102,16 +104,20 @@ export const approveRequest = async (
 
         const bloodGroupKey = request.bloodGroup.replace("+", "_POS").replace("-", "_NEG") as keyof IBloodStock;
 
-        if (!hospital.bloodStock || (hospital.bloodStock[bloodGroupKey] || 0) < request.units) {
+        let stockRecord = await BloodStock.findOne({ hospital: hospitalId }).session(session);
+        if (!stockRecord) {
+            stockRecord = new BloodStock({ hospital: hospitalId });
+        }
+
+        const currentStock = (stockRecord.get(bloodGroupKey) as number) || 0;
+        if (currentStock < request.units) {
             throw new Error("Insufficient blood stock");
         }
 
         // Reduce stock
-        if (hospital.bloodStock) {
-            const stock = hospital.bloodStock as IBloodStock;
-            stock[bloodGroupKey] = (stock[bloodGroupKey] || 0) - request.units;
-        }
-        await hospital.save({ session });
+        stockRecord.set(bloodGroupKey, currentStock - request.units);
+        stockRecord.lastUpdated = new Date();
+        await stockRecord.save({ session });
 
         request.status = RequestStatus.APPROVED;
         request.processedBy = new mongoose.Types.ObjectId(hospitalId);
@@ -248,9 +254,10 @@ export const findNearbyEmergencyRequests = async (
     bloodGroup: string
 ) => {
     const radiusInMeters = radiusInKm * 1000;
+    const compatibleGroups = getCompatibleRecipients(bloodGroup as BloodGroup);
 
     const requests = await BloodRequest.find({
-        bloodGroup,
+        bloodGroup: { $in: compatibleGroups },
         status: { $in: [RequestStatus.PENDING, RequestStatus.APPROVED] },
         location: {
             $near: {
@@ -270,7 +277,7 @@ export const findNearbyEmergencyRequests = async (
 
 export const completeEmergencyRequest = async (
     requestId: string,
-    donorId: string
+    userId: string
 ) => {
     const request = await BloodRequest.findById(requestId);
 
@@ -282,8 +289,8 @@ export const completeEmergencyRequest = async (
         throw new Error("Request is not in approved state");
     }
 
-    const isDonor = request.processedBy?.toString() === donorId;
-    const isPatient = request.patient?.toString() === donorId;
+    const isDonor = request.processedBy?.toString() === userId;
+    const isPatient = request.patient?.toString() === userId;
 
     if (!isDonor && !isPatient) {
         throw new Error("Unauthorized to complete this request");
@@ -292,18 +299,32 @@ export const completeEmergencyRequest = async (
     request.status = RequestStatus.COMPLETED;
     await request.save();
 
-    const donor = await User.findById(donorId);
+    // Award points to the donor, not the person who confirms the request
+    const actualDonorId = request.processedBy;
+    const donor = await User.findById(actualDonorId);
 
     if (donor) {
         donor.lastDonationDate = new Date();
         donor.isAvailable = false;
 
-        // Award Impact Points
-        donor.impactPoints = (donor.impactPoints || 0) + 10;
+        // Update Rank & Award Badges
+        const currentPoints = donor.impactPoints || 0;
+        donor.impactPoints = currentPoints + 10;
 
-        // Update Rank
-        if (donor.impactPoints > 150) donor.rank = "Hero";
-        else if (donor.impactPoints > 50) donor.rank = "Life Saver";
+        const badges = new Set(donor.badges || []);
+
+        if (donor.impactPoints >= 150) {
+            badges.add("Life Vanguard");
+            badges.add("Hero");
+        }
+        if (donor.impactPoints >= 50) badges.add("Regular Hero");
+        if (donor.impactPoints >= 10) badges.add("First Drop");
+
+        donor.badges = Array.from(badges);
+        donor.markModified("badges");
+
+        if (donor.impactPoints >= 150) donor.rank = "Hero";
+        else if (donor.impactPoints >= 50) donor.rank = "Life Saver";
         else donor.rank = "Novice";
 
         await donor.save();
@@ -311,7 +332,7 @@ export const completeEmergencyRequest = async (
 
     // Create donation history record
     await Donation.create({
-        donor: donorId,
+        donor: actualDonorId,
         patient: request.patient,
         request: request._id,
     });

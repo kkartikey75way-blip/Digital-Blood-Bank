@@ -34,7 +34,7 @@ export const requestApi = baseApi.injectEndpoints({
                 url: `/requests/${requestId}/complete`,
                 method: "PATCH",
             }),
-            invalidatesTags: ["Request"],
+            invalidatesTags: ["Request", "User", "Donation"],
         }),
         fulfillRequest: builder.mutation<{ success: boolean; data: IBloodRequest }, string>({
             query: (requestId) => ({

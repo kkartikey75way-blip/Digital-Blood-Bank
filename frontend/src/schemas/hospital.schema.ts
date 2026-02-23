@@ -6,7 +6,7 @@ export const updateStockSchema = z.object({
     }),
     units: z.number({
         message: "Units must be a number",
-    }).min(0, "Units cannot be negative"),
+    }).int("Units must be an integer"),
 });
 
 export type UpdateStockSchemaType = z.infer<typeof updateStockSchema>;

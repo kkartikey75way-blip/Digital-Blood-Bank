@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
     systemStats,
     bloodGroupAnalytics,
+    geoDemandAnalytics,
     viewAllRequests,
 } from "../controllers/admin.controller";
 import {
@@ -27,6 +28,13 @@ router.get(
     authenticate,
     authorize(UserRole.ADMIN),
     bloodGroupAnalytics
+);
+
+router.get(
+    "/analytics/geo-demand",
+    authenticate,
+    authorize(UserRole.ADMIN),
+    geoDemandAnalytics
 );
 
 router.get(

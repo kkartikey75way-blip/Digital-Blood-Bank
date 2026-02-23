@@ -8,12 +8,35 @@ import toast from "react-hot-toast";
 import DonorStats from "./components/DonorStats";
 import ImpactHistory from "./components/ImpactHistory";
 import NearbyRequestsList from "./components/NearbyRequestsList";
+import AchievementGallery from "./components/AchievementGallery";
+import HeroCertificate from "./components/HeroCertificate";
 
 const DonorDashboard = () => {
     const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const getGreeting = () => {
+        const hour = currentTime.getHours();
+        const name = profileData?.data?.name?.split(" ")[0] || "Champion";
+        const rank = profileData?.data?.rank || "Novice";
+
+        let prefix = "Greeting";
+        if (hour < 12) prefix = "Morning";
+        else if (hour < 17) prefix = "Afternoon";
+        else prefix = "Evening";
+
+        const adj = rank === "Hero" ? "Heroic" : rank === "Life Saver" ? "Guardian" : "Valiant";
+        return `${adj} ${prefix}, ${name}`;
+    };
 
     const { data: profileData } = useGetProfileQuery();
     const currentUserId = profileData?.data?._id;
+    const userBloodGroup = profileData?.data?.bloodGroup || "";
 
     const handleFetchLocation = () => {
         if ("geolocation" in navigator) {
@@ -40,8 +63,8 @@ const DonorDashboard = () => {
         latitude: coords?.latitude || 0,
         longitude: coords?.longitude || 0,
         radius: 50,
-        bloodGroup: ""
-    }, { skip: !coords });
+        bloodGroup: userBloodGroup
+    }, { skip: !coords || !userBloodGroup });
 
     const [acceptRequest, { isLoading: isAccepting }] = useAcceptRequestMutation();
     const [completeRequest, { isLoading: isCompleting }] = useCompleteRequestMutation();
@@ -78,14 +101,15 @@ const DonorDashboard = () => {
             {/* Greeting */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div>
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tight">Champion's Hub</h2>
+                    <h2 className="text-4xl font-black text-slate-900 tracking-tight">{getGreeting()}</h2>
                     <div className="flex items-center gap-3 mt-2">
                         <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Zap className="w-3 h-3 text-amber-500" /> Legend Status: Active
+                            <Zap className={`w-3 h-3 ${profileData?.data?.isAvailable ? "text-amber-500" : "text-slate-300"}`} />
+                            Legend Status: {profileData?.data?.isAvailable ? "Active" : "Resting"}
                         </p>
                         <span className="w-1 h-1 rounded-full bg-slate-300" />
                         <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Activity className="w-3 h-3 text-red-600" /> Pulse: Optimal
+                            <Activity className="w-3 h-3 text-red-600" /> Pulse: {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Sync
                         </p>
                     </div>
                 </div>
@@ -105,6 +129,17 @@ const DonorDashboard = () => {
                 impactPoints={profileData?.data?.impactPoints || 0}
                 rank={profileData?.data?.rank || "Novice"}
                 isLoading={isHistoryLoading}
+            />
+
+            {/* Achievements */}
+            <AchievementGallery badges={profileData?.data?.badges || []} />
+
+            {/* Hero Certificate */}
+            <HeroCertificate
+                donorName={profileData?.data?.name || "Life Saver"}
+                rank={profileData?.data?.rank || "Novice"}
+                impactPoints={profileData?.data?.impactPoints || 0}
+                livesSaved={history.length * 3}
             />
 
             {/* Main Content Grid */}

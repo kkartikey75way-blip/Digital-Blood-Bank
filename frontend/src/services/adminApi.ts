@@ -1,6 +1,14 @@
 import { baseApi } from "./baseApi";
 import type { ISystemStats, IBloodDemand, IBloodRequest } from "../types/request.types";
-import type { IUser } from "../types/user.types";
+import type { IUser, ILowStockHospital } from "../types/user.types";
+
+export interface GeoDemandPoint {
+    lat: number;
+    lng: number;
+    bloodGroup: string;
+    urgency: "LOW" | "MEDIUM" | "HIGH";
+    weight: number;
+}
 
 export const adminApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
@@ -34,9 +42,13 @@ export const adminApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Hospital"],
         }),
-        getLowStockHospitals: builder.query<{ success: boolean; count: number; data: IUser[] }, void>({
+        getLowStockHospitals: builder.query<{ success: boolean; count: number; data: ILowStockHospital[] }, void>({
             query: () => "/admin/hospitals/low-stock",
             providesTags: ["Hospital"],
+        }),
+        getGeoDemand: builder.query<{ success: boolean; data: GeoDemandPoint[] }, void>({
+            query: () => "/admin/analytics/geo-demand",
+            providesTags: ["Stats"],
         }),
     }),
 });
@@ -48,5 +60,6 @@ export const {
     useGetPendingHospitalsQuery,
     useApproveHospitalMutation,
     useRejectHospitalMutation,
-    useGetLowStockHospitalsQuery
+    useGetLowStockHospitalsQuery,
+    useGetGeoDemandQuery
 } = adminApi;

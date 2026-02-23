@@ -17,15 +17,11 @@ import notificationRoutes from "./routes/notification.routes";
 import { globalErrorHandler } from "./utils/errorHandler";
 import { AppError } from "./utils/response.utils";
 import { logger } from "./utils/logger";
+import { apiLimiter } from "./middlewares/rateLimit.middleware";
 
 const app = express();
 
-// Rate Limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: "Too many requests from this IP, please try again after 15 minutes",
-});
+
 
 // Middlewares
 app.use(helmet()); // Security headers
@@ -37,7 +33,7 @@ if (process.env.NODE_ENV === 'development') {
     app.use(morgan("dev"));
 }
 
-app.use(limiter);
+app.use("/api", apiLimiter);
 
 // Health Route
 app.get("/", (_req, res) => {

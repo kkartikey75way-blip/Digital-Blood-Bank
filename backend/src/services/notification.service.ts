@@ -7,9 +7,11 @@ dotenv.config();
 
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.ethereal.email",
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: false, // true for 465, false for other ports
+    ...(process.env.EMAIL_HOST?.includes("gmail") ? { service: "gmail" } : {
+        host: process.env.EMAIL_HOST || "smtp.ethereal.email",
+        port: Number(process.env.EMAIL_PORT) || 587,
+        secure: false, // true for 465, false for other ports
+    }),
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -36,8 +38,12 @@ export const createNotification = async (
         // 2. Fetch User Email
         const user = await User.findById(recipientId);
         if (user && user.email) {
-            // 3. Send Email (Non-blocking)
-            sendEmail(user.email, title, message).catch(err => console.error("Email send failed:", err));
+            // 3. Send Email (Non-blocking) if credentials exist
+            if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                sendEmail(user.email, title, message).catch(err => console.error("Email send failed:", err));
+            } else {
+                console.log(`[DEV] Email notification suppressed (missing credentials): To ${user.email}, Subject: ${title}`);
+            }
         }
 
         return notification;

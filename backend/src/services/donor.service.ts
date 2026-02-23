@@ -1,4 +1,5 @@
-import { User, UserRole, IUser } from "../models/user.model";
+import { User, UserRole } from "../models/user.model";
+import { getCompatibleDonors, BloodGroup } from "../utils/compatibility.utils";
 
 interface DonorSearchParams {
     latitude?: number;
@@ -79,13 +80,14 @@ export const findNearbyDonors = async ({
     bloodGroup: string;
 }) => {
     const radiusInMeters = radiusInKm * 1000;
+    const compatibleDonors = getCompatibleDonors(bloodGroup as BloodGroup);
 
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
     const donors = await User.find({
         role: UserRole.DONOR,
-        bloodGroup,
+        bloodGroup: { $in: compatibleDonors },
         isVerified: true,
         isBlocked: false,
         isAvailable: true,

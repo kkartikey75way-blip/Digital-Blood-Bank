@@ -9,6 +9,7 @@ import {
     Loader2
 } from "lucide-react";
 import { useGetBloodDemandQuery, useGetLowStockHospitalsQuery } from "../../services/adminApi";
+import GeoAnalyticsMap from "./components/GeoAnalyticsMap";
 
 const AdminReports = () => {
     const { data: demandData, isLoading: isDemandLoading } = useGetBloodDemandQuery();
@@ -24,6 +25,9 @@ const AdminReports = () => {
                 <h2 className="text-3xl font-bold text-slate-900">System Analytics</h2>
                 <p className="text-slate-500 mt-1">Real-time demand forecasting and inventory bottleneck monitoring.</p>
             </div>
+
+            {/* Geo Demand Map */}
+            <GeoAnalyticsMap />
 
             <div className="grid lg:grid-cols-2 gap-8">
                 {/* Blood Group Demand */}
@@ -87,7 +91,7 @@ const AdminReports = () => {
                             <div className="space-y-4">
                                 {lowStockHospitals.map((hospital) => (
                                     <motion.div
-                                        key={hospital._id}
+                                        key={hospital.hospitalId}
                                         whileHover={{ x: 4 }}
                                         className="p-5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between group cursor-pointer"
                                     >
@@ -96,8 +100,8 @@ const AdminReports = () => {
                                                 <Hospital className="w-5 h-5 text-amber-500" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-sm">{hospital.name}</h4>
-                                                <p className="text-xs text-slate-500">Located in Area</p>
+                                                <h4 className="font-bold text-sm">{hospital.hospitalName}</h4>
+                                                <p className="text-xs text-slate-500">Low Stock: {hospital.lowStockGroups.join(", ")}</p>
                                             </div>
                                         </div>
                                         <button className="p-2 rounded-lg bg-white/5 group-hover:bg-amber-500 transition-colors">

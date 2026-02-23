@@ -1,7 +1,20 @@
-import { User, UserRole, IBloodStock } from "../models/user.model";
+import { User, UserRole } from "../models/user.model";
+import { BloodStock, IBloodStock as IBloodStockModel } from "../models/bloodStock.model";
 import { getLowStockGroups } from "../utils/stock.utils";
 import { logActivity } from "./activity.service";
 import { ActivityType } from "../models/activity.model";
+
+// Simplified interface for internal weight matching
+interface IBloodStock {
+    A_POS: number;
+    A_NEG: number;
+    B_POS: number;
+    B_NEG: number;
+    O_POS: number;
+    O_NEG: number;
+    AB_POS: number;
+    AB_NEG: number;
+}
 
 const bloodGroupMap: Record<string, keyof IBloodStock> = {
     "A+": "A_POS",
@@ -18,7 +31,7 @@ export const updateBloodStock = async (
     hospitalId: string,
     bloodGroup: string,
     units: number
-): Promise<IBloodStock | undefined> => {
+): Promise<IBloodStockModel> => {
     if (!Number.isFinite(units)) {
         throw new Error("Invalid units value");
     }
@@ -43,31 +56,22 @@ export const updateBloodStock = async (
         throw new Error("Invalid blood group");
     }
 
-    if (!hospital.bloodStock) {
-        hospital.bloodStock = {
-            A_POS: 0,
-            A_NEG: 0,
-            B_POS: 0,
-            B_NEG: 0,
-            O_POS: 0,
-            O_NEG: 0,
-            AB_POS: 0,
-            AB_NEG: 0,
-        };
+    let stockRecord = await BloodStock.findOne({ hospital: hospitalId });
+
+    if (!stockRecord) {
+        stockRecord = new BloodStock({ hospital: hospitalId });
     }
 
-    const updatedStock =
-        (hospital.bloodStock[stockKey] || 0) + units;
+    const updatedStock = (stockRecord.get(stockKey) || 0) + units;
 
     if (updatedStock < 0) {
         throw new Error("Blood stock cannot be negative");
     }
 
-    hospital.bloodStock[stockKey] = updatedStock;
+    stockRecord.set(stockKey, updatedStock);
+    stockRecord.lastUpdated = new Date();
 
-    hospital.markModified("bloodStock");
-
-    await hospital.save();
+    await stockRecord.save();
 
     await logActivity(
         hospitalId,
@@ -76,7 +80,7 @@ export const updateBloodStock = async (
         `Updated ${bloodGroup} stock by ${units} units`
     );
 
-    return hospital.bloodStock;
+    return stockRecord;
 };
 
 export const getBloodStock = async (
@@ -88,18 +92,23 @@ export const getBloodStock = async (
         throw new Error("Hospital not found");
     }
 
-    const defaultStock: IBloodStock = {
-        A_POS: 0,
-        A_NEG: 0,
-        B_POS: 0,
-        B_NEG: 0,
-        O_POS: 0,
-        O_NEG: 0,
-        AB_POS: 0,
-        AB_NEG: 0,
+    let stockRecord = await BloodStock.findOne({ hospital: hospitalId });
+
+    if (!stockRecord) {
+        stockRecord = await BloodStock.create({ hospital: hospitalId });
+    }
+
+    const stock: IBloodStock = {
+        A_POS: stockRecord.A_POS,
+        A_NEG: stockRecord.A_NEG,
+        B_POS: stockRecord.B_POS,
+        B_NEG: stockRecord.B_NEG,
+        O_POS: stockRecord.O_POS,
+        O_NEG: stockRecord.O_NEG,
+        AB_POS: stockRecord.AB_POS,
+        AB_NEG: stockRecord.AB_NEG,
     };
 
-    const stock = hospital.bloodStock || defaultStock;
     const lowStock = getLowStockGroups(stock);
 
     return {

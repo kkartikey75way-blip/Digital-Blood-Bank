@@ -8,12 +8,12 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().trim().email("Invalid email address").toLowerCase(),
-    phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     role: z.enum(["ADMIN", "DONOR", "PATIENT", "HOSPITAL"], {
         message: "Please select a valid role",
     }),
-    bloodGroup: z.string().optional(),
+    bloodGroup: z.enum(["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]).optional(),
     hospitalName: z.string().optional(),
     licenseNumber: z.string().optional(),
     latitude: z.number().optional(),

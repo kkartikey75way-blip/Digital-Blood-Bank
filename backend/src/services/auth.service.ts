@@ -105,7 +105,7 @@ export const loginUser = async (email: string, password: string) => {
     const refreshToken = generateRefreshToken(user._id.toString());
 
     user.refreshToken = refreshToken;
-    await user.save();
+    await User.findByIdAndUpdate(user._id, { refreshToken });
 
     await logActivity(
         user._id.toString(),

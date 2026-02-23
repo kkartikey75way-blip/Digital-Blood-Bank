@@ -26,6 +26,7 @@ export interface IUser {
     isBlocked: boolean;
     impactPoints: number;
     rank: string;
+    badges: string[];
 
     // Donor fields
     bloodGroup?: string;
@@ -37,8 +38,14 @@ export interface IUser {
     hospitalName?: string;
     hospitalAddress?: string;
     licenseNumber?: string;
-    bloodStock?: IBloodStock;
+    // bloodStock removed, use dedicated BloodStock API
 
     createdAt: string;
     updatedAt: string;
+}
+
+export interface ILowStockHospital {
+    hospitalId: string;
+    hospitalName: string;
+    lowStockGroups: string[];
 }

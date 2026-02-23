@@ -4,7 +4,7 @@ import {
     loginUser,
     refreshAccessToken,
 } from "../services/auth.service";
-import { IUser } from "../models/user.model";
+import { User, IUser } from "../models/user.model";
 
 interface RegisterRequestBody extends Partial<IUser> { }
 
@@ -112,9 +112,17 @@ export const getProfile = async (
             });
         }
 
+        const user = await User.findById(req.user.id).select("-password -refreshToken");
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
         return res.status(200).json({
             success: true,
-            data: req.user,
+            data: user,
         });
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Failed to fetch profile";

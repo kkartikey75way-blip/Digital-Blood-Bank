@@ -3,13 +3,14 @@ import {
     getSystemStats,
     getBloodGroupDemand,
     getAllRequests,
+    getGeoDemandStats,
+    getHospitalsWithLowStock
 } from "../services/admin.service";
 import {
     getPendingHospitals,
     approveHospital,
     rejectHospital,
 } from "../services/admin.hospital.service";
-import { getHospitalsWithLowStock } from "../services/admin.service";
 
 export const systemStats = async (
     req: Request,
@@ -196,6 +197,32 @@ export const lowStockHospitals = async (
         return res.status(400).json({
             success: false,
             message: "Failed to fetch low stock hospitals",
+        });
+    }
+};
+
+export const geoDemandAnalytics = async (
+    req: Request,
+    res: Response
+): Promise<Response> => {
+    try {
+        const data = await getGeoDemandStats();
+
+        return res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.status(400).json({
+            success: false,
+            message: "Failed to fetch geo demand analytics",
         });
     }
 };

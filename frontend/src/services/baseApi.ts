@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { getAccessToken, getRefreshToken, setTokens, clearAuthStorage } from "../utils/auth";
 import { Mutex } from "async-mutex";
+import toast from "react-hot-toast";
 
 const mutex = new Mutex();
 
@@ -63,6 +64,12 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
             result = await baseQuery(args, api, extraOptions);
         }
     }
+
+    if (result.error && result.error.status === 429) {
+        // Handle rate limiting globally
+        toast.error("Too many requests. Please slow down.");
+    }
+
     return result;
 };
 

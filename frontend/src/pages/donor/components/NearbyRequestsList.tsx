@@ -118,14 +118,17 @@ const NearbyRequestsList = ({
                 <div className="relative z-10">
                     <h4 className="font-black text-3xl mb-4 tracking-tight">Prime Readiness Protocol</h4>
                     <p className="text-indigo-100/70 mb-10 max-w-xl font-bold leading-relaxed lowercase">
-                        ensure peak operational capacity before initializing a donor-link. your biological contribution is a high-yield humanitarian asset.
+                        {requests.length > 0
+                            ? "Active emergency signals detected in your sector. ensure peak operational capacity before initializing a donor-link."
+                            : "No active signals in immediate range. maintain metabolic readiness for future regional broadcasts."
+                        }
                     </p>
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="px-6 py-3 bg-white/10 rounded-2xl backdrop-blur-xl text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-white/20 transition-colors">
-                            Hydration Logic
+                            {requests.length > 0 ? "Priority Deployment" : "Standing By"}
                         </div>
                         <div className="px-6 py-3 bg-white/10 rounded-2xl backdrop-blur-xl text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-white/20 transition-colors">
-                            Metabolic Yield
+                            {new Date().getHours() < 12 ? "Morning Vitality" : "Evening Recovery"}
                         </div>
                     </div>
                 </div>
