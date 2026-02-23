@@ -127,6 +127,7 @@ export const getNearbyRequests = async (
             };
 
         const requests = await findNearbyEmergencyRequests(
+            req.user.id,
             Number(latitude),
             Number(longitude),
             Number(radius),

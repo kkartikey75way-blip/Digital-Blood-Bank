@@ -248,6 +248,7 @@ export const rejectDonor = async (requestId: string, patientId: string) => {
 };
 
 export const findNearbyEmergencyRequests = async (
+    userId: string,
     latitude: number,
     longitude: number,
     radiusInKm: number,
@@ -257,6 +258,7 @@ export const findNearbyEmergencyRequests = async (
     const compatibleGroups = getCompatibleRecipients(bloodGroup as BloodGroup);
 
     const requests = await BloodRequest.find({
+        patient: { $ne: userId },
         bloodGroup: { $in: compatibleGroups },
         status: { $in: [RequestStatus.PENDING, RequestStatus.APPROVED] },
         location: {
