@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 const mutex = new Mutex();
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: "http://localhost:5000/api",
+    baseUrl: import.meta.env.VITE_API_URL,
     prepareHeaders: (headers) => {
         const token = getAccessToken();
         if (token) {
